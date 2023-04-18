@@ -21,7 +21,7 @@ export default function Login() {
         placeholder="Senha"
         secureTextEntry={true}
       />
-      <ButtonNavigate location='HomeMain' navigation={navigation}>Login</ButtonNavigate>
+      <ButtonNavigate location='HomeScreen' navigation={navigation}>Login</ButtonNavigate>
       </View>
     </View>
   )

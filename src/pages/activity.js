@@ -1,84 +1,104 @@
-import { View, Text, Button, TextInput, FlatList, TouchableOpacity } from 'react-native';
-import React, { useContext, useState } from 'react';
-import ButtonNavigate from '../components/button';
-import { useNavigation } from '@react-navigation/native';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { DataContext } from '../components/context/dataContext';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import moment from 'moment';
 
-export default function ActivityScreen() {
-  const navigation = useNavigation();
-  const { todoList, setTodoList } = useContext(DataContext);
-  const [todoItem, setTodoItem] = useState('');
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
+export default function App() {
+  const [atividades, setAtividades] = useState([]);
+  const [nome, setNome] = useState('');
+  const [dataLimite, setDataLimite] = useState('');
 
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
-  };
-
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
-  };
-
-  const handleConfirmDate = (date) => {
-    hideDatePicker();
-    setSelectedDate(date);
-  };
-
-  const handleAddTodo = () => {
-    if (todoItem.length === 0 || selectedDate === '') {
+  const adicionarAtividade = () => {
+    if (nome.trim() === '') {
+      alert('O campo nome é obrigatório.');
+      return;
+    }
+    if (dataLimite.trim() === '') {
+      alert('O campo data é obrigatório.');
       return;
     }
 
-    setTodoList((prevTodoList) => [
-      ...prevTodoList,
-      { id: Math.random().toString(), value: todoItem, date: selectedDate },
-    ]);
-    setTodoItem('');
-    setSelectedDate('');
+    const dataMoment = moment(dataLimite, 'DD/MM/YYYY', true);
+    if (!dataMoment.isValid()) {
+      alert('Data inválida. Por favor, digite uma data no formato DD/MM/YYYY.');
+      return;
+    }
+
+    const novaAtividade = {
+      nome: nome,
+      dataLimite: dataLimite
+    };
+
+    setAtividades([...atividades, novaAtividade]);
+    setNome('');
+    setDataLimite('');
+    alert('Atividade adicionada com sucesso!');
   };
 
-  const handleRemoveTodo = (todoId) => {
-    setTodoList((prevTodoList) => {
-      return prevTodoList.filter((todo) => todo.id !== todoId);
-    });
+  const removerAtividade = (index) => {
+    const novasAtividades = [...atividades];
+    novasAtividades.splice(index, 1);
+    setAtividades(novasAtividades);
   };
 
   return (
-    <View>
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 10 }}>Atividades</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Minhas Atividades</Text>
+
       <TextInput
-        placeholder="Digite uma atividade..."
-        value={todoItem}
-        onChangeText={setTodoItem}
+        style={styles.input}
+        placeholder="Nome da atividade"
+        value={nome}
+        onChangeText={(text) => setNome(text)}
       />
-      <TouchableOpacity onPress={showDatePicker}>
-        <Text>Escolher Data</Text>
-      </TouchableOpacity>
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={handleConfirmDate}
-        onCancel={hideDatePicker}
+      <TextInput
+        style={styles.input}
+        placeholder="Data limite (DD/MM/YYYY)"
+        value={dataLimite}
+        onChangeText={(text) => setDataLimite(text)}
+        keyboardType="numeric"
+        maxLength={10}
       />
-      <Button onPress={handleAddTodo} title="Adicionar" />
-      <FlatList
-        data={todoList}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View>
-            <Text>{item.value}</Text>
-            <Text>{item.date.toString()}</Text>
-            <Button
-              onPress={() => handleRemoveTodo(item.id)}
-              title="Remover"
-            />
+      <Button title="Adicionar" onPress={adicionarAtividade} />
+
+      <View>
+        {atividades.map((atividade, index) => (
+          <View key={index} style={styles.atividade}>
+            <Text>{atividade.nome} - {atividade.dataLimite}</Text>
+            <Button title="Excluir" onPress={() => removerAtividade(index)} />
           </View>
-        )}
-      />
-      <ButtonNavigate navigation={navigation} location="HomeScreen">
-        Voltar
-      </ButtonNavigate>
+        ))}
+      </View>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 32,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    padding: 8,
+    marginBottom: 16,
+    width: '80%',
+  },
+  atividade: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 5,
+    padding: 16,
+    marginBottom: 8,
+    width: '80%',
+  },
+});
